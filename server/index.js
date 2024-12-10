@@ -4,10 +4,13 @@ const auth = require('json-server-auth')
 const app = jsonServer.create()
 const router = jsonServer.router('db.json')
 
+app.use(function(req, res, next){
+    setTimeout(next, 2000);
+  });
 // /!\ Bind the router db to the app
 app.db = router.db
 
 // You must apply the auth middleware before the router
 app.use(auth)
 app.use(router)
-app.listen(3000)
+app.listen(3001)
