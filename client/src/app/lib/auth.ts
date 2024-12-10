@@ -15,7 +15,6 @@ export async function createSession(accessToken: string) {
 }
 
 export async function deleteSession() {
-  console.log("YEAH")
   const cookieStore = await cookies()
   cookieStore.delete('session')
 }

@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  nextjs:
+    build:
+      context: ./client  # Build the Next.js app from the 'client' directory
+      dockerfile: Dockerfile  # Use the Dockerfile in the 'client' directory
+      args:
+        NEXT_PUBLIC_API: http://api:3001
+    command: npm run start  # Run Next.js in production mode
+    ports:
+      - "3000:3000"  # Expose port 3000 for Next.js
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API=http://api:3001
+    depends_on:
+      - api
+    networks:
+      - frontend
+    
+
+  nginx:
+    build:
+      context: ./client  # Build the Nginx image from the 'client' directory
+      dockerfile: Dockerfile.nginx  # Use the Nginx Dockerfile inside 'client'
+    ports:
+      - "80:80"  # Expose port 80 for Nginx
+    depends_on:
+      - nextjs  # Make sure Nginx waits for Next.js to be ready
+    networks:
+      - frontend
+
+  api:
+    build: ./server
+    container_name: api
+    ports:
+      - "3001:3001"  # Expose port 3001 for the API
+    networks:
+      - frontend
+
+networks:
+  frontend:
+    driver: bridge
