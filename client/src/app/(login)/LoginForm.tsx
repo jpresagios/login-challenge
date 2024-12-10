@@ -11,7 +11,7 @@ import { useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import Swal from "sweetalert2";
 
-export default function Login() {
+export default function LoginForm() {
   const {
     register,
     handleSubmit,
