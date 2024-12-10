@@ -22,7 +22,7 @@ export async function handleLoginForm(formData: FormData) {
   };
 
   try {
-    const response = await fetchWithTimeout("http://localhost:3001/login", {
+    const response = await fetchWithTimeout(`${process.env.NEXT_PUBLIC_API}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -30,7 +30,6 @@ export async function handleLoginForm(formData: FormData) {
       body: JSON.stringify(payload),
     }, 5000);
 
-    console.log("pepepep")
     if (response.ok) {
       const data = await response.json();
 

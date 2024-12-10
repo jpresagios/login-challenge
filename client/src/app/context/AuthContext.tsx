@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import React, {
   createContext,
@@ -12,12 +12,18 @@ interface User {
   email: string;
 }
 
+interface LastSuccessfulLogin {
+  email?: string | null;
+  rememberMe?: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
-  setUser: (user: User) => void
-  setRememberMe: (rememberMe: boolean) => void
-  rememberMe: boolean
-  logout: () => void
+  setUser: (user: User) => void;
+  setSuccessLogin: (successLogin: LastSuccessfulLogin) => void;
+  successLoginState: LastSuccessfulLogin;
+  logout: () => void;
+  loading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -25,12 +31,12 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 );
 
 export const useUser = () => {
-  const context = use(AuthContext)
+  const context = use(AuthContext);
 
-  if (!context) throw new Error("Must be use inside AuthProvider")
+  if (!context) throw new Error("Must be use inside AuthProvider");
 
-  return context
-}
+  return context;
+};
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -43,37 +49,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   children: React.ReactNode;
 }) => {
   const [user, setStateUser] = useState<User | null>(null);
-  const [rememberMe, setStateRememberMe] = useState(false);
+  const [successLoginState, setStateSuccessLogin] =
+    useState<LastSuccessfulLogin>({ email: null, rememberMe: false });
+  const [loading, setLoading] = useState(true);
 
-  const setUser = (user: User) => {
+  const setUser = (user: User | null) => {
     setStateUser(user);
     persistUserToLocalStorage(user);
   };
 
   const persistUserToLocalStorage = (user: User | null) => {
     if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(user));
     } else {
-      localStorage.removeItem('user');
+      localStorage.removeItem("user");
     }
   };
 
-  const setRememberMe = (rememberMe: boolean) => {
-    setStateRememberMe(rememberMe);
-    persistRememberMeToLocalStorage(rememberMe);
+  const setSuccessLogin = (newLastSuccessLoginData: LastSuccessfulLogin) => {
+    const metaDataToRemember = { ...successLoginState, ...newLastSuccessLoginData }
+    setStateSuccessLogin(metaDataToRemember);
+    persistRememberMetaData({ ...metaDataToRemember });
   };
 
-  const persistRememberMeToLocalStorage = (rememberMe: boolean) => {
-    localStorage.setItem('rememberMe', JSON.stringify(rememberMe));
+  const persistRememberMetaData = (successLoginState: LastSuccessfulLogin) => {
+    localStorage.setItem("rememberMe", JSON.stringify(successLoginState));
   };
 
   const logout = () => {
-    localStorage.removeItem('user')
-  }
+    localStorage.removeItem("user");
+    setUser(null);
+  };
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const savedRememberMe = localStorage.getItem('rememberMe');
-    
+    const savedUser = localStorage.getItem("user");
+    const savedRememberMe = localStorage.getItem("rememberMe");
+
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
       setUser(parsedUser);
@@ -81,12 +91,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 
     if (savedRememberMe) {
       const parsedRememberMe = JSON.parse(savedRememberMe);
-      setRememberMe(parsedRememberMe)
+
+      if (!parsedRememberMe.rememberMe) {
+        setSuccessLogin({ ...parsedRememberMe, email: null});
+      } else {
+        setSuccessLogin(parsedRememberMe);
+      }
     }
+
+    setLoading(false);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, rememberMe, setRememberMe, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        successLoginState,
+        setSuccessLogin,
+        logout,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
