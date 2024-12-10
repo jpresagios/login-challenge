@@ -8,3 +8,5 @@ npm-shrinkwrap.json
 # Coveralls
 .nyc_output
 coverage
+
+.DS_Store
