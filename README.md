@@ -39,4 +39,66 @@ Navigate to http://localhost:3000
 
 3. Check performance in deep.
 
-4. Deployment.
+4. Ensuring Component Accessibility
+
+5. Security, invalidated based on JWT expiration, ensuring that access is revoked when the token expires.
+
+6. Deployment.
+
+
+### Small guideline about components
+
+The Challenge explored a potential solution using tailwind-variants to create components that can easily accommodate specific design variants. This approach simplifies the implementation and management of design variations, as tailwind-variants allows you to declaratively inject classes based on the selected variant.
+
+
+```tsx
+<TextField.Root>
+  <TextField.Input />
+</TextField.Root>
+```
+
+
+```tsx
+<TextField.Root size="large">
+  <TextField.Input />
+</TextField.Root>
+```
+
+The components are designed to accept new classes, which are merged and take precedence over the internal ones. This allows for easy extension when predefined variants don't fully meet specific UX requirements.
+
+```tsx
+<TextField.Root className="h-28">
+  <TextField.Input />
+</TextField.Root>
+```
+
+Simple components (atoms) were built using composition, making it easier to modify their default behavior and swap in different subcomponents as needed.
+
+```tsx
+<TextField.Root className="h-28">
+  <TextField.Slot>
+     <SearchIcon/>
+  </TextField.Slot>
+  <TextField.Input />
+</TextField.Root>
+```
+
+Multiple slots are supported
+
+```tsx
+<TextField.Root className="h-28">
+  <TextField.Slot>
+     <SearchIcon/>
+  </TextField.Slot>
+  <TextField.Input />
+  <TextField.Slot>
+     <CopyIcon/>
+  </TextField.Slot>
+</TextField.Root>
+```
+
+There is a live page where you can interact with the previous snippet. You can access it via the route: http://localhost:3000/experimental.
+
+### Security base in routes
+
+Protected routes are supported using the authentication session. For example, the /experimental route is protected and can only be accessed by authenticated users.
