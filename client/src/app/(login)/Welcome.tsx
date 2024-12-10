@@ -5,7 +5,7 @@ export const Welcome = ({email, handleLogout}: {email: string, handleLogout: () 
   return (
     <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow-md">
       <div className="text-lg font-semibold text-gray-800">
-        Hi, <span className="text-blue-600">{email}</span>
+        Hi, {email}
       </div>
       <Button
         onClick={handleLogout}
