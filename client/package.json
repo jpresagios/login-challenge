@@ -9,11 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.9.1",
     "next": "15.0.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.0",
     "tailwind-merge": "^2.5.5",
-    "tailwind-variants": "^0.3.0"
+    "tailwind-variants": "^0.3.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/node": "^20",
