@@ -15,8 +15,8 @@ interface User {
 }
 
 interface LastSuccessfulLogin {
-  email: string | null;
-  rememberMe: boolean;
+  email?: string | null;
+  rememberMe?: boolean;
 }
 
 interface AuthContextType {
@@ -95,9 +95,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     if (savedRememberMe) {
       const parsedRememberMe = JSON.parse(savedRememberMe);
-      setSuccessLogin(parsedRememberMe);
+
+      if (!parsedRememberMe.rememberMe) {
+        persistToLocalStorage('rememberMe', null)
+      } else {
+        setSuccessLogin(parsedRememberMe);
+      }
     }
-  }, [setUser, setSuccessLogin]);
+  }, [setUser, setSuccessLogin, persistToLocalStorage]);
 
   useEffect(() => {
     initializeAuthData();
