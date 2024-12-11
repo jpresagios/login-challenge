@@ -32,3 +32,9 @@ npm run dev
 npm run build
 npm run start
 ```
+
+# Run test
+
+```
+npm run test
+```
