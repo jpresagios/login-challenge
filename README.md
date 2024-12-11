@@ -43,7 +43,7 @@ Navigate to http://localhost:3000
 
 5. Security, invalidated based on JWT expiration, ensuring that access is revoked when the token expires.
 
-6. Deployment.
+6. Improve error handlers.
 
 
 ### Small guideline about components

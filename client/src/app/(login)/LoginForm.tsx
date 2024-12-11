@@ -156,15 +156,13 @@ export default function LoginForm() {
         if (rememberMe) {
           setSuccessLogin({ email: result.data.user.email });
         }
-      } else {
-        Swal.fire("Error", "Oops something went wrong :(", "error");
       }
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        Swal.fire("Error", error.message);
-      } else {
-        console.error("An unknown error occurred");
-      }
+      console.log(error)
+      Swal.fire(
+        "Error",
+        "Please double-check your credentials and try again"
+      );
     }
   };
 
