@@ -99,6 +99,7 @@ export const Form = ({
 
         <div className="flex items-center mt-4">
           <Checkbox
+            id="rememberMe"
             checked={rememberMe}
             onChange={(e) => {
               setSuccessLogin({ rememberMe: e.target.checked });
