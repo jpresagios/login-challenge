@@ -31,6 +31,32 @@ Navigate to http://localhost:3000
 
 ```
 
+### Users
+
+By default The API expose a user with following credentials
+
+```
+{
+    "email": "hello@edited.com",
+    "password": "hello123"
+}
+```
+
+You can register new users by making a request to the following endpoint http://localhost:3001
+
+For example, the following curl command creates a new user with the email hi@edited.com and the password hello124. This user can then be used for testing purposes
+
+```
+curl --location 'http://localhost:3001/register' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "email": "hi@edited.com",
+    "password": "hello124"
+}'
+```
+
+
+
 #### Features that I want to add or improve
 
 1. Test the support for different browsers using [BrowserStack](https://browserstack.com).
