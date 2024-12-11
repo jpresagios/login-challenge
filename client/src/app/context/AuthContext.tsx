@@ -6,6 +6,8 @@ import React, {
   ReactNode,
   use,
   useEffect,
+  useCallback,
+  useMemo,
 } from "react";
 
 interface User {
@@ -13,13 +15,13 @@ interface User {
 }
 
 interface LastSuccessfulLogin {
-  email?: string | null;
-  rememberMe?: boolean;
+  email: string | null;
+  rememberMe: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
-  setUser: (user: User) => void;
+  setUser: (user: User | null) => void;
   setSuccessLogin: (successLogin: LastSuccessfulLogin) => void;
   successLoginState: LastSuccessfulLogin;
   logout: () => void;
@@ -32,9 +34,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 
 export const useUser = () => {
   const context = use(AuthContext);
-
-  if (!context) throw new Error("Must be use inside AuthProvider");
-
+  if (!context) throw new Error("Must be used inside AuthProvider");
   return context;
 };
 
@@ -42,45 +42,49 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// AuthProvider component
-export const AuthProvider: React.FC<AuthProviderProps> = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setStateUser] = useState<User | null>(null);
   const [successLoginState, setStateSuccessLogin] =
-    useState<LastSuccessfulLogin>({ email: null, rememberMe: false });
+    useState<LastSuccessfulLogin>({
+      email: null,
+      rememberMe: false,
+    });
   const [loading, setLoading] = useState(true);
 
-  const setUser = (user: User | null) => {
-    setStateUser(user);
-    persistUserToLocalStorage(user);
-  };
-
-  const persistUserToLocalStorage = (user: User | null) => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
+  const persistToLocalStorage = useCallback((key: string, value: unknown) => {
+    if (value !== undefined && value !== null) {
+      localStorage.setItem(key, JSON.stringify(value));
     } else {
-      localStorage.removeItem("user");
+      localStorage.removeItem(key);
     }
-  };
+  }, []);
 
-  const setSuccessLogin = (newLastSuccessLoginData: LastSuccessfulLogin) => {
-    const metaDataToRemember = { ...successLoginState, ...newLastSuccessLoginData }
-    setStateSuccessLogin(metaDataToRemember);
-    persistRememberMetaData({ ...metaDataToRemember });
-  };
+  const setUser = useCallback(
+    (user: User | null) => {
+      setStateUser(user);
+      persistToLocalStorage("user", user);
+    },
+    [persistToLocalStorage]
+  );
 
-  const persistRememberMetaData = (successLoginState: LastSuccessfulLogin) => {
-    localStorage.setItem("rememberMe", JSON.stringify(successLoginState));
-  };
+  const setSuccessLogin = useCallback(
+    (newLastSuccessLoginData: LastSuccessfulLogin) => {
+      const updatedSuccessLogin = {
+        ...successLoginState,
+        ...newLastSuccessLoginData,
+      };
+      setStateSuccessLogin(updatedSuccessLogin);
+      persistToLocalStorage("rememberMe", updatedSuccessLogin);
+    },
+    [successLoginState, persistToLocalStorage]
+  );
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("user");
     setUser(null);
-  };
-  useEffect(() => {
+  }, [setUser]);
+
+  const initializeAuthData = useCallback(() => {
     const savedUser = localStorage.getItem("user");
     const savedRememberMe = localStorage.getItem("rememberMe");
 
@@ -91,29 +95,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 
     if (savedRememberMe) {
       const parsedRememberMe = JSON.parse(savedRememberMe);
-
-      if (!parsedRememberMe.rememberMe) {
-        setSuccessLogin({ ...parsedRememberMe, email: null});
-      } else {
-        setSuccessLogin(parsedRememberMe);
-      }
+      setSuccessLogin(parsedRememberMe);
     }
+  }, [setUser, setSuccessLogin]);
 
+  useEffect(() => {
+    initializeAuthData();
     setLoading(false);
   }, []);
 
+  const contextValue = useMemo(
+    () => ({
+      user,
+      setUser,
+      successLoginState,
+      setSuccessLogin,
+      logout,
+      loading,
+    }),
+    [user, successLoginState, loading, setUser, setSuccessLogin, logout]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        setUser,
-        successLoginState,
-        setSuccessLogin,
-        logout,
-        loading,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };
