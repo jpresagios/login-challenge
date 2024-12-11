@@ -4,10 +4,11 @@ import userEvent from "@testing-library/user-event";
 import LoginForm from "@/app/(login)/LoginForm";
 import { AuthProvider } from "@/app/context/AuthContext";
 import { faker } from "@faker-js/faker";
-import { handleLoginForm } from "@/app/(login)/actions";
+import { handleLoginForm, removeSession } from "@/app/(login)/actions";
 
 jest.mock("@/app/(login)/actions", () => ({
   handleLoginForm: jest.fn(),
+  removeSession: jest.fn(),
 }));
 
 beforeEach(() => {
@@ -80,6 +81,35 @@ describe("LoginForm", () => {
   });
 
   describe("Valid form", () => {
+    it("should successfully submit the form and back to login when logout", async () => {
+      const user = userEvent.setup();
+      const email = faker.internet.email();
+      const mockData = { success: true, data: { user: { email } } };
+      (handleLoginForm as jest.Mock).mockResolvedValue(mockData);
+      (removeSession as jest.Mock).mockResolvedValue({});
+
+      render(
+        <AuthProvider>
+          <LoginForm />
+        </AuthProvider>
+      );
+
+      const username = screen.getByRole("textbox", { name: "email" });
+      await user.type(username, email);
+
+      const password = screen.getByRole("textbox", { name: "password" });
+      await user.type(password, "abcdedfgh1ttss");
+
+      const submitButton = screen.getByRole("button", { name: "Login Now" });
+      await user.click(submitButton);
+      expect(screen.getByText(`Hi, ${email}`)).toBeInTheDocument();
+
+      const logoutButton = screen.getByRole("button", { name: "Logout" });
+      await user.click(logoutButton);
+
+      expect(screen.getByText("Login Now")).toBeInTheDocument();
+    });
+
     it("should successfully submit the form and display the user's email", async () => {
       const user = userEvent.setup();
       const email = faker.internet.email();
