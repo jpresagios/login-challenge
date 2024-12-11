@@ -86,6 +86,7 @@ The Challenge explored a potential solution using tailwind-variants to create co
 ```
 
 
+TextField with large variant
 ```tsx
 <TextField.Root size="large">
   <TextField.Input />
