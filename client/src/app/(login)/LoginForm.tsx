@@ -66,7 +66,7 @@ export const Form = ({
         >
           <TextField.Input
             aria-label="password"
-            placeholder="password"
+            placeholder="Password"
             type={showPassword ? "text" : "password"}
             {...register("password")}
           />
