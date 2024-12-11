@@ -1,16 +1,25 @@
 import * as React from "react";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LoginForm from "@/app/(login)/LoginForm";
 import { AuthProvider } from "@/app/context/AuthContext";
-import { faker } from '@faker-js/faker';
+import { faker } from "@faker-js/faker";
 import { handleLoginForm } from "@/app/(login)/actions";
 
-afterEach(cleanup);
-
-jest.mock('@/app/(login)/actions', () => ({
+jest.mock("@/app/(login)/actions", () => ({
   handleLoginForm: jest.fn(),
 }));
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  localStorage.clear();
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+  localStorage.clear();
+  cleanup();
+});
 
 describe("LoginForm", () => {
   describe("Invalid form", () => {
@@ -23,7 +32,7 @@ describe("LoginForm", () => {
       );
 
       const input = screen.getByRole("textbox", { name: "email" });
-      await userEvent.type(input, "email");
+      await user.type(input, "email");
 
       const submitButton = screen.getByRole("button", { name: "Login Now" });
       await user.click(submitButton);
@@ -40,7 +49,7 @@ describe("LoginForm", () => {
       );
 
       const input = screen.getByRole("textbox", { name: "password" });
-      await userEvent.type(input, "pass");
+      await user.type(input, "pass");
 
       const submitButton = screen.getByRole("button", { name: "Login Now" });
       await user.click(submitButton);
@@ -59,7 +68,7 @@ describe("LoginForm", () => {
       );
 
       const input = screen.getByRole("textbox", { name: "password" });
-      await userEvent.type(input, "pass");
+      await user.type(input, "pass");
 
       const submitButton = screen.getByRole("button", { name: "Login Now" });
       await user.click(submitButton);
@@ -72,11 +81,11 @@ describe("LoginForm", () => {
 
   describe("Valid form", () => {
     it("should successfully submit the form and display the user's email", async () => {
+      const user = userEvent.setup();
       const email = faker.internet.email();
       const mockData = { success: true, data: { user: { email } } };
       (handleLoginForm as jest.Mock).mockResolvedValue(mockData);
 
-      const user = userEvent.setup();
       render(
         <AuthProvider>
           <LoginForm />
@@ -84,14 +93,80 @@ describe("LoginForm", () => {
       );
 
       const username = screen.getByRole("textbox", { name: "email" });
-      await userEvent.type(username, email);
+      await user.type(username, email);
 
       const password = screen.getByRole("textbox", { name: "password" });
-      await userEvent.type(password, "abcdedfgh1ttss");
+      await user.type(password, "abcdedfgh1ttss");
 
       const submitButton = screen.getByRole("button", { name: "Login Now" });
       await user.click(submitButton);
       expect(screen.getByText(`Hi, ${email}`)).toBeInTheDocument();
+    });
+  });
+
+  describe("AuthProvider - rememberMe logic", () => {
+    it("should load the user from mocked localStorage if rememberMe is true", async () => {
+      const email = faker.internet.email();
+      jest.spyOn(Storage.prototype, "getItem").mockImplementation((key) => {
+        return key === "rememberMe"
+          ? JSON.stringify({ email, rememberMe: true })
+          : null;
+      });
+
+      render(
+        <AuthProvider>
+          <LoginForm />
+        </AuthProvider>
+      );
+
+      const username = screen.getByRole("textbox", {
+        name: "email",
+      }) as HTMLInputElement;
+      expect(username).toHaveValue(email);
+
+      const rememberMeCheckbox = screen.getByRole("checkbox", {
+        name: "Remember me",
+      });
+      expect(rememberMeCheckbox).toBeChecked();
+    });
+
+    it("should update localStorage when rememberMe checkbox is clicked", async () => {
+      const user = userEvent.setup();
+      const email = faker.internet.email();
+      const rememberMeData = { email, rememberMe: true };
+      const mockData = { success: true, data: { user: { email } } };
+      (handleLoginForm as jest.Mock).mockResolvedValue(mockData);
+
+      const setItemMock = jest
+        .spyOn(Storage.prototype, "setItem")
+        .mockImplementation(() => {});
+
+      render(
+        <AuthProvider>
+          <LoginForm />
+        </AuthProvider>
+      );
+
+      const emailInput = screen.getByRole("textbox", { name: "email" });
+      const passwordInput = screen.getByRole("textbox", { name: "password" });
+      const rememberMeCheckbox = screen.getByRole("checkbox", {
+        name: "Remember me",
+      });
+
+      await user.type(emailInput, email);
+      await user.type(passwordInput, "abcdedfgh1ttss");
+
+      await user.click(rememberMeCheckbox);
+
+      const submitButton = screen.getByRole("button", { name: "Login Now" });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(setItemMock).toHaveBeenCalledWith(
+          "rememberMe",
+          JSON.stringify(rememberMeData)
+        );
+      });
     });
   });
 });
