@@ -45,6 +45,8 @@ Navigate to http://localhost:3000
 
 6. Improve error handlers.
 
+7. Improvde repsonsive design
+
 
 ### Small guideline about components
 
